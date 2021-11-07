@@ -364,7 +364,10 @@ int process_command(struct command_t *command)
 		// set args[arg_count-1] (last) to NULL
 		command->args[command->arg_count-1]=NULL;
 
-		execvp(command->name, command->args); // exec+args+path
+		// execvp(command->name, command->args); // exec+args+path
+		char path[sizeof("/usr/bin/")+ sizeof(command->name)] = "/usr/bin/";
+		strcat(path, command->name);
+		execv(path, command->args);
 		exit(0);
 		/// TODO: do your own exec with path resolving using execv()
 	}
