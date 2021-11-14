@@ -339,6 +339,35 @@ int process_command(struct command_t *command)
 			return SUCCESS;
 		}
 	}
+	//implement remindme here.
+
+	if(strcmp(command->name, "remindme") == 0){
+
+		char *timeString = command->args[0];
+		char *hour = strtok(timeString, "."); //extract hour
+		char *min = strtok(NULL, "."); //extract minute
+		char pathToNotify[30] = "/usr/bin/notify-send";
+
+		int size;
+		//getting the total size of
+		for(int i = 1; i < command->arg_count ; i++){
+					size = size + sizeof(command->args[i]);
+				}
+		printf("%d\n", size);
+		char message2[500] = {0};
+		for(int i = 1; i < command->arg_count ; i++){
+			strcat(message2, command->args[i]);
+			strcat(message2, " ");
+		}
+
+		char buffer[1000] = {0};
+		sprintf(buffer, "crontab -l | { cat; echo '%s %s * * * XDG_RUNTIME_DIR=/run/user/$(id -u) /usr/bin/notify-send %s'; } | crontab -",
+		min, hour, message2);
+		char *arr[] = {"sh","-c", buffer, NULL};
+		execv("/usr/bin/sh", arr);
+return SUCCESS;
+
+			}
 
 	pid_t pid=fork();
 	if (pid==0) // child
@@ -364,12 +393,55 @@ int process_command(struct command_t *command)
 		// set args[arg_count-1] (last) to NULL
 		command->args[command->arg_count-1]=NULL;
 
+		//if(strcmp(command->name, "remindme") == 0){
+
+					//char * timeString = command->args[1];
+					//int hour = atoi(strtok(timeString, "."));
+					//int minute = atoi(strtok(NULL, "."));
+					//char pathToNotify[30] = "/usr/bin/notify-send";
+					//char * message = command->args[2];
+					//char *args2[] = {"crontab", "-l", "\|" ,NULL};
+							//(char **)malloc(sizeof(char *));
+
+
+					//printf("%s\n", args2[0]);
+					//printf("%s\n", message);
+	//* * * * * XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send "you are awesome"
+					//printf("%s\n", args2[0]);
+					//execv("/usr/bin/crontab", args2);
+					//execv("/usr/bin/crontab", args2);
+
+
+
+
+	//crontab -l | {cat; echo "* * * * * XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send you are awesome";}|crontab -
+
+
+		//}
+
 		// execvp(command->name, command->args); // exec+args+path
 		char path[sizeof("/usr/bin/")+ sizeof(command->name)] = "/usr/bin/";
 		strcat(path, command->name);
 		execv(path, command->args);
+
+
+
+//		switch(command->name){
+//
+//				case "remindme":
+//					printf("%s", "hello")
+//
+//
+//				case "short":
+//
+//				case "bookmark"
+//				}
+
+
 		exit(0);
 		/// TODO: do your own exec with path resolving using execv()
+		//Switch statement
+
 	}
 	else
 	{
@@ -379,7 +451,7 @@ int process_command(struct command_t *command)
 	}
 
 	// TODO: your implementation here
-
+	//* * * * * XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send "you are awesome"
 	printf("-%s: %s: command not found\n", sysname, command->name);
 	return UNKNOWN;
 }
