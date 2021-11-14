@@ -348,12 +348,6 @@ int process_command(struct command_t *command)
 		char *min = strtok(NULL, "."); //extract minute
 		char pathToNotify[30] = "/usr/bin/notify-send";
 
-		int size;
-		//getting the total size of
-//		for(int i = 1; i < command->arg_count ; i++){
-//					size = size + sizeof(command->args[i]);
-//				}
-
 		char message2[500] = {0};
 		for(int i = 1; i < command->arg_count ; i++){
 			strcat(message2, command->args[i]);
@@ -369,9 +363,20 @@ int process_command(struct command_t *command)
 
 			}
 	//implement custom awesome command i.e findme
-	if(strcmp(command->name, "findme") == 0){
-		char keyword[50] = {0}; //
+
+	if(strcmp(command->name, "cwallpaper") == 0){
+
+		char savePath[] = "/tmp/random_background.jpg";
+		char url[] = "https://unsplash.it/1920/1080/?random";
+		char *args3[] = {"wget", "-O", savePath, url ,NULL};
+		char *args4[] = {"gsettings", "set", "org.gnome.desktop.background", "picture-url", savePath};
+
+		execv("/usr/bin/wget", args3);
+		execv("/usr/bin/gsettings", args4);
+
 	}
+
+
 
 	pid_t pid=fork();
 	if (pid==0) // child
