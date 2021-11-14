@@ -350,10 +350,10 @@ int process_command(struct command_t *command)
 
 		int size;
 		//getting the total size of
-		for(int i = 1; i < command->arg_count ; i++){
-					size = size + sizeof(command->args[i]);
-				}
-		printf("%d\n", size);
+//		for(int i = 1; i < command->arg_count ; i++){
+//					size = size + sizeof(command->args[i]);
+//				}
+
 		char message2[500] = {0};
 		for(int i = 1; i < command->arg_count ; i++){
 			strcat(message2, command->args[i]);
@@ -365,9 +365,13 @@ int process_command(struct command_t *command)
 		min, hour, message2);
 		char *arr[] = {"sh","-c", buffer, NULL};
 		execv("/usr/bin/sh", arr);
-return SUCCESS;
+		return SUCCESS;
 
 			}
+	//implement custom awesome command i.e findme
+	if(strcmp(command->name, "findme") == 0){
+		char keyword[50] = {0}; //
+	}
 
 	pid_t pid=fork();
 	if (pid==0) // child
