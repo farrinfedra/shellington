@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <errno.h>
 const char * sysname = "shellington";
+char namesFilePath[255];
+char pathsFilePath[255];
 
 enum return_codes {
 	SUCCESS = 0,
@@ -300,8 +302,15 @@ int prompt(struct command_t *command)
   	return SUCCESS;
 }
 int process_command(struct command_t *command);
+
+
 int main()
 {
+	getcwd(namesFilePath, sizeof(namesFilePath));\
+	strcat(namesFilePath, "/names.txt");
+	getcwd(pathsFilePath, sizeof(pathsFilePath));
+	strcat(pathsFilePath, "/paths.txt");
+
 	while (1)
 	{
 		struct command_t *command=malloc(sizeof(struct command_t));
@@ -319,6 +328,52 @@ int main()
 
 	printf("\n");
 	return 0;
+}
+
+void short_set_command(char *name){
+	FILE *namesFile = fopen(namesFilePath, "a+");
+	FILE *pathsFile = fopen(pathsFilePath, "a+");
+	char buffer[100];
+	//Write name to the file.
+	strcpy(buffer, name);
+	strcat(buffer, "\n");
+	fputs(buffer, namesFile);
+	//Write current working path to the file.
+	memset(buffer,0,sizeof(buffer));
+	getcwd(buffer, sizeof(buffer));
+	strcat(buffer, "\n");
+	fputs(buffer, pathsFile);
+	fclose(namesFile);
+	fclose(pathsFile);
+}
+
+void short_jump_command(char *name){
+	FILE *namesFile = fopen(namesFilePath, "r");
+	FILE *pathsFile = fopen(pathsFilePath, "r");
+	char targetPath[1024];
+	char tempPath[1024];
+	int flag = 0;
+	if (namesFile == NULL || pathsFile == NULL){
+		printf("Could not find any set path history");
+		return;
+	}
+	char buffer[1024];
+	while (fgets(buffer, sizeof(buffer), namesFile) != NULL){
+		fgets(tempPath, sizeof(tempPath), pathsFile);
+		buffer[strcspn(buffer, "\n")] = 0;
+		if (strcmp(buffer, name) == 0){
+			tempPath[strcspn(tempPath, "\n")] = 0;
+			strcpy(targetPath, tempPath);
+			flag = 1;
+		}
+	}
+	
+	if (flag == 1) {
+		int r = chdir(targetPath);
+		if (r == -1){
+			printf("Could not jump to path.\n");
+		}
+	}		
 }
 
 int process_command(struct command_t *command)
@@ -340,6 +395,18 @@ int process_command(struct command_t *command)
 		}
 	}
 
+	if (strcmp(command->name, "short") == 0){
+		if (command->arg_count == 2) {
+			if (strcmp(command->args[0], "set") == 0){
+				short_set_command(command->args[1]);
+				return 2;
+			} else if (strcmp(command->args[0], "jump") == 0){
+				short_jump_command(command->args[1]);
+				return 2;
+			}
+		}
+	}
+	
 	pid_t pid=fork();
 	if (pid==0) // child
 	{
