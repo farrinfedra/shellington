@@ -9,6 +9,7 @@
 const char * sysname = "shellington";
 char namesFilePath[255];
 char pathsFilePath[255];
+char todoFilePath[255];
 
 enum return_codes {
 	SUCCESS = 0,
@@ -306,10 +307,12 @@ int process_command(struct command_t *command);
 
 int main()
 {
-	getcwd(namesFilePath, sizeof(namesFilePath));\
+	getcwd(namesFilePath, sizeof(namesFilePath));
 	strcat(namesFilePath, "/names.txt");
 	getcwd(pathsFilePath, sizeof(pathsFilePath));
 	strcat(pathsFilePath, "/paths.txt");
+	getcwd(todoFilePath, sizeof(todoFilePath));
+	strcat(todoFilePath, "/todos.txt");
 
 	while (1)
 	{
@@ -376,9 +379,6 @@ void short_jump_command(char *name){
 	}		
 }
 
-void remindMe(struct command_t *command);
-void cWallPaper(struct command_t *command);
-
 void remindMe(struct command_t *command){
 	char *timeString = command->args[0];
 	char *hour = strtok(timeString, "."); //extract hour
@@ -410,6 +410,73 @@ void cWallPaper(struct command_t *command){
 	execv("/usr/bin/gsettings", args4);
 }
 
+void todo_add_command(char *task){
+	FILE *todoFile = fopen(todoFilePath, "a+");
+
+	if (todoFile == NULL) {
+		printf("Unable to open todos.txt file. Exiting...\n");
+		exit(EXIT);
+	}
+
+	char buffer[255];
+	strcpy(buffer, task);
+	strcat(buffer, "\n");
+	fputs(buffer, todoFile);
+	fclose(todoFile);
+}
+
+void todo_done_command(int targetIndex){
+	FILE *todoFile = fopen(todoFilePath, "a+");
+	FILE *tempFile = fopen("temp.txt", "w");
+	int lineCounter = 0;
+
+	if (todoFile == NULL || tempFile == NULL){
+		printf("Unable to open file. Exiting...\n");
+		exit(EXIT);
+	}
+	
+	char buffer[1024];
+  	memset(buffer, 0, sizeof buffer);
+	while (fgets(buffer, sizeof(buffer), todoFile) != NULL){
+		lineCounter++;	
+		if (targetIndex == lineCounter + 1){
+			strcat(buffer, "***DONE*** -> ");
+			fputs(buffer, tempFile);
+		} else {
+			fputs(buffer, tempFile);
+		}
+	}
+
+	fclose(todoFile);
+	fclose(tempFile);
+	remove(todoFilePath);
+	rename("temp.txt", todoFilePath);
+}
+
+void todo_list_command(){
+	FILE *todoFile = fopen(todoFilePath, "a+");
+
+	if (todoFile == NULL){
+		printf("Unable to open todos.txt file. Exiting...\n");
+		exit(EXIT);
+	}
+	
+	int lineCount = 1;
+	char buffer[1024];
+	while (fgets(buffer, sizeof(buffer), todoFile) != NULL){	
+		printf("%d) %s", lineCount, buffer);
+		lineCount++;			
+	}
+
+	fclose(todoFile);
+}
+
+void todo_clear_command(){
+	FILE *todoFile = fopen(todoFilePath, "w");
+	fclose(todoFile);
+}
+
+
 int process_command(struct command_t *command)
 {
 	int r;
@@ -433,22 +500,42 @@ int process_command(struct command_t *command)
 	if(strcmp(command->name, "remindme") == 0){
 		remindMe(command);
 		return SUCCESS;
-	}
 
-	//implement custom awesome command i.e cwallpaper
+	}
 
 	if (strcmp(command->name, "short") == 0){
 		if (command->arg_count == 2) {
 			if (strcmp(command->args[0], "set") == 0){
 				short_set_command(command->args[1]);
-				return 2;
+				return SUCCESS;
 			} else if (strcmp(command->args[0], "jump") == 0){
 				short_jump_command(command->args[1]);
-				return 2;
+				return SUCCESS;
+			}
+		}
+	}
+
+	if (strcmp(command->name, "todo") == 0){
+		if (command->arg_count == 2){
+			if (strcmp(command->args[0], "add") == 0){
+				todo_add_command(command->args[1]);
+				return SUCCESS;
+			} else if (strcmp(command->args[0], "done") == 0){
+				todo_done_command(atoi(command->args[1]));
+				return SUCCESS;
+			}
+		} else if (command->arg_count == 1) {
+			if (strcmp(command->args[0], "clear") == 0){
+				todo_clear_command();
+				return SUCCESS;	
+			} else if (strcmp(command->args[0], "-l") == 0){
+				todo_list_command();
+				return SUCCESS;
 			}
 		}
 	}
 	
+
 	pid_t pid=fork();
 	if (pid==0) // child
 	{
@@ -474,7 +561,7 @@ int process_command(struct command_t *command)
 
 		command->args[command->arg_count-1]=NULL;
 
-			if(strcmp(command->name, "cwallpaper") == 0){
+		if(strcmp(command->name, "cwallpaper") == 0){
 			cWallPaper(command);
 			return SUCCESS;
 		}	
