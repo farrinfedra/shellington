@@ -323,6 +323,7 @@ int main()
 
 void remindMe(struct command_t *command);
 void cWallPaper(struct command_t *command);
+void bookmarkFn(struct command_t *command);
 
 void remindMe(struct command_t *command){
 
@@ -346,6 +347,7 @@ void remindMe(struct command_t *command){
 			execv("/usr/bin/sh", arr);
 
 
+
 }
 
 void cWallPaper(struct command_t *command){
@@ -353,10 +355,31 @@ void cWallPaper(struct command_t *command){
 	char savePath[] = "/tmp/random_background.jpg";
 	char url[] = "https://unsplash.it/1920/1080/?random";
 	char *args3[] = {"wget", "-O", savePath, url ,NULL};
-	char *args4[] = {"gsettings", "set", "org.gnome.desktop.background", "picture-url", savePath};
+	char *args4[] = {"gsettings", "set", "org.gnome.desktop.background", "picture-uri", savePath};
+
 
 	execv("/usr/bin/wget", args3);
+	printf("\n\n DONE -----------");
 	execv("/usr/bin/gsettings", args4);
+}
+char **cmd;
+
+void bookmarkFn(struct command_t *command){
+
+//	 cmd = (char **)malloc(sizeof(char *) * command->arg_count);
+//	*cmd = (char *) malloc(sizeof(char));
+//
+//	for(int i = 0; i < command->arg_count; i++){
+//		*cmd = (char *)realloc(sizeof(command->args[i]));
+//	}
+
+	printf("%s\n", command->args[0]);
+	printf("%s\n", command->args[1]);
+
+
+
+
+
 }
 
 int process_command(struct command_t *command)
@@ -389,6 +412,10 @@ int process_command(struct command_t *command)
 		cWallPaper(command);
 
 	}
+	if(strcmp(command->name, "bookmark") == 0){
+		bookmarkFn(command);
+	}
+
 
 
 	pid_t pid=fork();
