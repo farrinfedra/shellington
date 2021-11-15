@@ -300,6 +300,8 @@ int prompt(struct command_t *command)
   	return SUCCESS;
 }
 int process_command(struct command_t *command);
+
+
 int main()
 {
 	while (1)
@@ -339,16 +341,46 @@ void remindMe(struct command_t *command){
 				strcat(message2, command->args[i]);
 				strcat(message2, " ");
 			}
-
-			char buffer[1000] = {0};
-			sprintf(buffer, "crontab -l | { cat; echo '%s %s * * * XDG_RUNTIME_DIR=/run/user/$(id -u) /usr/bin/notify-send %s'; } | crontab -",
-			min, hour, message2);
-			char *arr[] = {"sh","-c", buffer, NULL};
-			execv("/usr/bin/sh", arr);
-
-
-
 }
+
+void short_jump_command(char *name){
+	FILE *namesFile = fopen(namesFilePath, "r");
+	FILE *pathsFile = fopen(pathsFilePath, "r");
+	char targetPath[1024];
+	char tempPath[1024];
+	int flag = 0;
+	if (namesFile == NULL || pathsFile == NULL){
+		printf("Could not find any set path history");
+		return;
+	}
+	char buffer[1024];
+	while (fgets(buffer, sizeof(buffer), namesFile) != NULL){
+		fgets(tempPath, sizeof(tempPath), pathsFile);
+		buffer[strcspn(buffer, "\n")] = 0;
+		if (strcmp(buffer, name) == 0){
+			tempPath[strcspn(tempPath, "\n")] = 0;
+			strcpy(targetPath, tempPath);
+			flag = 1;
+		}
+	}
+	
+	if (flag == 1) {
+		int r = chdir(targetPath);
+		if (r == -1){
+			printf("Could not jump to path.\n");
+		}
+	}		
+}
+
+//void remindMe(struct command_t *command){
+//	char *timeString = command->args[0];
+//	char *hour = strtok(timeString, "."); //extract hour
+//	char *min = strtok(NULL, "."); //extract minute
+//	char pathToNotify[30] = "/usr/bin/notify-send";
+//
+//
+//
+//}
 
 void cWallPaper(struct command_t *command){
 
@@ -359,7 +391,6 @@ void cWallPaper(struct command_t *command){
 
 
 	execv("/usr/bin/wget", args3);
-	printf("\n\n DONE -----------");
 	execv("/usr/bin/gsettings", args4);
 }
 char **cmd;
@@ -375,9 +406,6 @@ void bookmarkFn(struct command_t *command){
 
 	printf("%s\n", command->args[0]);
 	printf("%s\n", command->args[1]);
-
-
-
 
 
 }
@@ -400,16 +428,13 @@ int process_command(struct command_t *command)
 			return SUCCESS;
 		}
 	}
+
 	//implement remindme here.
 	if(strcmp(command->name, "remindme") == 0){
 		remindMe(command);
+		return SUCCESS;
+
 	}
-
-	//implement custom awesome command i.e cwallpaper
-
-	if(strcmp(command->name, "cwallpaper") == 0){
-
-		cWallPaper(command);
 
 	}
 	if(strcmp(command->name, "bookmark") == 0){
