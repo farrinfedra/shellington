@@ -234,7 +234,7 @@ int prompt(struct command_t *command)
   	while (1)
   	{
 		c=getchar();
-		// printf("Keycode: %u\n", c); // DEBUG: uncomment for debugging
+		 //printf("Keycode: %u\n", c); // DEBUG: uncomment for debugging
 
 		if (c==9) // handle tab
 		{
@@ -409,7 +409,71 @@ void cWallPaper(struct command_t *command){
 	execv("/usr/bin/wget", args3);
 	execv("/usr/bin/gsettings", args4);
 }
-char **cmd;
+char bookmarks[100][100] = {0};
+int numElems = 0;
+void bookmarkFn(struct command_t *command){
+
+
+
+	if(strcmp(command->args[0], "-l") == 0){ //bookmark -l
+
+		for(int i = 0; i < numElems; i++){
+				printf("%d %s\n", i, bookmarks[i]);
+
+			}
+	}
+	else if(strcmp(command->args[0], "-i") == 0){ //bookmark -i idx
+		int idx = atoi(command->args[1]);
+
+		//extract the command name
+		char *command = bookmarks[idx]; //command at index idx
+		char *copyCommand = strdup(command); //duplicate command
+		printf("%s\n", copyCommand); //works
+
+		char *tmp = strtok(copyCommand, "\""); //taking out " from the string
+		char *commandName = strtok(tmp, " "); // extract command name
+		char *commandArgs = strtok(NULL, " "); //extract arguments
+		//char *commandArgsm;
+		//sprintf(commandArgsm, "\"%s\"", commandArgs);
+		//printf("%s\n", "hi");
+		//char *commandName = strtok(command, " ");
+		//system("echo \"hi\" ");
+
+		//exec("/usr/bin/sh", "-c", command, NULL);
+		//FIXME: the first bookmark does not have " " around it. why? the rest does.
+		//TODO: execute the command at index idx
+
+	}
+	else if(strcmp(command->args[0], "-d") == 0){ //bookmark + -d + idx
+		int idx = atoi(command->args[1]);
+
+		numElems --;
+		for(int i = idx; i < numElems; i++){
+			strcpy(bookmarks[i], bookmarks[i + 1]);
+
+		}
+
+	}
+	else{ // bookmark + command
+		//concatenate command
+			char cmd[1000] = {0};
+			numElems ++;
+
+
+				for(int i = 0; i< command->arg_count - 1; i++){
+						strcat(cmd, command->args[i]);
+						strcat(cmd, " ");
+				}
+
+				strcat(cmd, command->args[command->arg_count - 1]);
+
+
+
+			strcpy(bookmarks[numElems - 1], cmd);
+
+
+	}
+}
 
 void todo_add_command(char *task){
 	FILE *todoFile = fopen(todoFilePath, "a+");
@@ -497,13 +561,6 @@ int process_command(struct command_t *command)
 		}
 	}
 
-	//implement remindme here.
-	if(strcmp(command->name, "remindme") == 0){
-		remindMe(command);
-		return SUCCESS;
-
-	}
-
 	if (strcmp(command->name, "short") == 0){
 		if (command->arg_count == 2) {
 			if (strcmp(command->args[0], "set") == 0){
@@ -535,6 +592,12 @@ int process_command(struct command_t *command)
 			}
 		}
 	}
+	if(strcmp(command->name, "bookmark") == 0){
+		bookmarkFn(command);
+		return SUCCESS;
+	}
+
+
 
 
 
@@ -549,6 +612,18 @@ int process_command(struct command_t *command)
 		// add a NULL argument to the end of args, and the name to the beginning
 		// as required by exec
 
+		if(strcmp(command->name, "remindme") == 0){
+			remindMe(command);
+			exit(0);
+		}else if(strcmp(command->name, "cwallpaper") == 0){
+			cWallPaper(command);
+			exit(0);
+		}
+//		else if(strcmp(command->name, "bookmark") == 0){
+//			bookmarkFn(command);
+//			exit(0);
+//		}
+
 		// increase args size by 2
 		command->args=(char **)realloc(
 			command->args, sizeof(char *)*(command->arg_count+=2));
@@ -561,16 +636,7 @@ int process_command(struct command_t *command)
 		command->args[0]=strdup(command->name);
 		// set args[arg_count-1] (last) to NULL
 
-		command->args[command->arg_count-1]=NULL;
-
-		if(strcmp(command->name, "cwallpaper") == 0){
-			cWallPaper(command);
-			return SUCCESS;
-		}	
-//		if(strcmp(command->name, "remindme") == 0){
-//					remindMe(command);
-//					return SUCCESS;
-//				}
+		command->args[command->arg_count-1]=NULL;	
 
 		// execvp(command->name, command->args); // exec+args+path
 		char path[sizeof("/usr/bin/")+ sizeof(command->name)] = "/usr/bin/";
