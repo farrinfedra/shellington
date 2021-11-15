@@ -496,13 +496,6 @@ int process_command(struct command_t *command)
 		}
 	}
 
-	//implement remindme here.
-	if(strcmp(command->name, "remindme") == 0){
-		remindMe(command);
-		return SUCCESS;
-
-	}
-
 	if (strcmp(command->name, "short") == 0){
 		if (command->arg_count == 2) {
 			if (strcmp(command->args[0], "set") == 0){
@@ -547,6 +540,14 @@ int process_command(struct command_t *command)
 		// add a NULL argument to the end of args, and the name to the beginning
 		// as required by exec
 
+		if(strcmp(command->name, "remindme") == 0){
+			remindMe(command);
+			exit(0);
+		}else if(strcmp(command->name, "cwallpaper") == 0){
+			cWallPaper(command);
+			exit(0);
+		}
+
 		// increase args size by 2
 		command->args=(char **)realloc(
 			command->args, sizeof(char *)*(command->arg_count+=2));
@@ -559,12 +560,7 @@ int process_command(struct command_t *command)
 		command->args[0]=strdup(command->name);
 		// set args[arg_count-1] (last) to NULL
 
-		command->args[command->arg_count-1]=NULL;
-
-		if(strcmp(command->name, "cwallpaper") == 0){
-			cWallPaper(command);
-			return SUCCESS;
-		}	
+		command->args[command->arg_count-1]=NULL;	
 
 		// execvp(command->name, command->args); // exec+args+path
 		char path[sizeof("/usr/bin/")+ sizeof(command->name)] = "/usr/bin/";
