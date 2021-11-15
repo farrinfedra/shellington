@@ -419,29 +419,18 @@ void bookmarkFn(struct command_t *command){
 
 		for(int i = 0; i < numElems; i++){
 				printf("%d %s\n", i, bookmarks[i]);
-
 			}
+
 	}
 	else if(strcmp(command->args[0], "-i") == 0){ //bookmark -i idx
 		int idx = atoi(command->args[1]);
 
-		//extract the command name
-		char *command = bookmarks[idx]; //command at index idx
-		char *copyCommand = strdup(command); //duplicate command
-		printf("%s\n", copyCommand); //works
+		char *cmd = bookmarks[idx];
+		cmd = cmd + 1;
+		strtok(cmd, "\"");
 
-		char *tmp = strtok(copyCommand, "\""); //taking out " from the string
-		char *commandName = strtok(tmp, " "); // extract command name
-		char *commandArgs = strtok(NULL, " "); //extract arguments
-		//char *commandArgsm;
-		//sprintf(commandArgsm, "\"%s\"", commandArgs);
-		//printf("%s\n", "hi");
-		//char *commandName = strtok(command, " ");
-		//system("echo \"hi\" ");
-
-		//exec("/usr/bin/sh", "-c", command, NULL);
-		//FIXME: the first bookmark does not have " " around it. why? the rest does.
-		//TODO: execute the command at index idx
+		parse_command(cmd, command);
+		process_command(command);
 
 	}
 	else if(strcmp(command->args[0], "-d") == 0){ //bookmark + -d + idx
@@ -452,6 +441,7 @@ void bookmarkFn(struct command_t *command){
 			strcpy(bookmarks[i], bookmarks[i + 1]);
 
 		}
+
 
 	}
 	else{ // bookmark + command
@@ -467,10 +457,7 @@ void bookmarkFn(struct command_t *command){
 
 				strcat(cmd, command->args[command->arg_count - 1]);
 
-
-
 			strcpy(bookmarks[numElems - 1], cmd);
-
 
 	}
 }
@@ -592,12 +579,11 @@ int process_command(struct command_t *command)
 			}
 		}
 	}
-	if(strcmp(command->name, "bookmark") == 0){
+
+	else if(strcmp(command->name, "bookmark") == 0){
 		bookmarkFn(command);
 		return SUCCESS;
 	}
-
-
 
 
 
@@ -619,10 +605,7 @@ int process_command(struct command_t *command)
 			cWallPaper(command);
 			exit(0);
 		}
-//		else if(strcmp(command->name, "bookmark") == 0){
-//			bookmarkFn(command);
-//			exit(0);
-//		}
+
 
 		// increase args size by 2
 		command->args=(char **)realloc(
