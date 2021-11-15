@@ -6,10 +6,22 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <sys/types.h>
+#include<sys/ioctl.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+
+#define PSTRAVERSE_B _IOW('a','a', int*)
+#define PSTRAVERSE_D _IOW('a','b', int*)
+
 const char * sysname = "shellington";
 char namesFilePath[255];
 char pathsFilePath[255];
 char todoFilePath[255];
+
+int MODULE_LOAD_FLAG = 0;
 
 enum return_codes {
 	SUCCESS = 0,
@@ -547,8 +559,11 @@ int process_command(struct command_t *command)
 	int r;
 	if (strcmp(command->name, "")==0) return SUCCESS;
 
-	if (strcmp(command->name, "exit")==0)
+	if (strcmp(command->name, "exit")==0){
+		char *remove_module[] = {"/usr/bin/sudo", "rmmod", "my_module.ko", NULL};
+		execve(remove_module[0], remove_module, NULL);
 		return EXIT;
+	}
 
 	if (strcmp(command->name, "cd")==0)
 	{
@@ -597,6 +612,36 @@ int process_command(struct command_t *command)
 		return SUCCESS;
 	}
 
+	if(strcmp(command->name, "pstraverse") == 0){
+		if (!MODULE_LOAD_FLAG) {
+			MODULE_LOAD_FLAG = 1;
+			pid_t pid=fork();
+			if (pid==0){ // child
+				char *install_module[] = {"/usr/bin/sudo", "insmod", "my_module.ko", NULL};
+				execve(install_module[0], install_module, NULL);
+				exit(0);
+			}
+			else {
+				wait(NULL);
+			}
+		}
+
+		if (MODULE_LOAD_FLAG) {
+			int fd = open("/dev/my_device", O_RDWR);
+			if(fd < 0) {
+				printf("Cannot open device file...\n");
+				return 0;
+			}
+			int pid = atoi(command->args[1]);
+			if(strcmp(command->args[0], "-b") == 0){
+				ioctl(fd, PSTRAVERSE_B, &pid);
+				return SUCCESS;
+			} else if(strcmp(command->args[0], "-d") == 0){ 
+				ioctl(fd, PSTRAVERSE_D, &pid);
+				return SUCCESS;
+			}
+		}
+	}
 
 
 
