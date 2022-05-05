@@ -5,10 +5,12 @@ This repository contains the source code of an extended version of the bash shel
   * short set <name>: Saves the current path.
   * short jump <name>: Jumps to the path with <name>.
 * bookmark command: Enables saving and executing frequently used shell commands with shortcuts.
-  * bookmark <cmd>: Saves the <cmd>.
-  * bookmark -i <index> Runs the command in <index>.
-  * bookmark -l : Lists all commands.
-  * bookmark -d <index> : Deletes the command at <index>.
+ ```
+bookmark <cmd>: Saves the <cmd>.
+bookmark -i <index> Runs the command in <index>.
+bookmark -l : Lists all commands.
+bookmark -d <index> : Deletes the command at <index>.
+ ```
 * remindme command: Displays a given reminder at a specified time on the screen.
   * remindme <time> <text>:  Reminds a certain event at a specified time in yy.mm.dd.hh.mm.ss format.
 * cwallpaper command: Changes the wallpaper to a random picture.
